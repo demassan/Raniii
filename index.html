@@ -466,7 +466,7 @@
         ? `Tinggal ${litCandles} lilin lagi`
         : "Make a wish…";
 
-      if (litCandles === 0) setTimeout(celebrate, 500);
+      if (litCandles === 0) celebrate();
     }
 
     candleXPositions.forEach(createCandle);
@@ -599,10 +599,7 @@
           audioEl = new Audio(CONFIG.music);
           audioEl.loop = true;
           audioEl.volume = 0.7;
-          audioEl.muted = true;
-          audioEl.play()
-            .then(() => { audioEl.pause(); audioEl.currentTime = 0; audioEl.muted = false; })
-            .catch(() => {});
+          audioEl.preload = "auto"; // hanya memuat file, tidak diputar
           return;
         }
 
