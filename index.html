@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Selamat Ulang Tahun 🎂</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#17131d;--ivory:#f4ede4;--gold:#d9c3a0;--rose:#c9a1a3;--mute:#9a93a3}
+*{box-sizing:border-box;margin:0}
+html,body{min-height:100%}
+body{background:radial-gradient(90% 60% at 50% 0%,#241c2e 0,var(--bg) 70%);color:var(--ivory);font-family:Jost,system-ui,sans-serif;font-weight:300;line-height:1.7;overflow-x:hidden;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+h1,h2{font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;line-height:1.1}
+main{max-width:720px;margin:0 auto;padding:0 24px 90px}
+section{padding:56px 0;text-align:center}
+#hero h1{font-size:clamp(2.4rem,10vw,4.2rem);color:var(--ivory);letter-spacing:.01em;font-style:italic}
+#hero p{margin-top:14px;color:var(--mute);font-size:1.02rem}
+.hint{display:inline-block;margin-top:20px;color:var(--gold);font-size:.95rem;letter-spacing:.04em}
+#cake{width:min(320px,84vw);display:block;margin:34px auto 0}
+.flame{cursor:pointer;transform-origin:center bottom;transform-box:fill-box;animation:flick 1.1s ease-in-out infinite alternate}
+.flame:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+.flame.off{animation:none;opacity:0;transform:scale(.2);transition:.35s}
+.smoke{opacity:0}.off+.smoke{animation:smoke 1.6s ease-out}
+@keyframes flick{from{transform:scale(1,1) rotate(-2deg)}to{transform:scale(.92,1.1) rotate(2deg)}}
+@keyframes smoke{0%{opacity:.6;transform:translateY(0)}100%{opacity:0;transform:translateY(-26px)}}
+#after{display:none}
+#after.show{display:block}
+#after h2{font-size:clamp(1.8rem,7vw,2.5rem);color:var(--ivory);margin-bottom:8px;font-style:italic}
+.sub{color:var(--mute);margin-bottom:30px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.card{perspective:800px;height:170px;cursor:pointer;background:none;border:0;color:inherit;font:inherit;padding:0}
+.card:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+.in{position:relative;width:100%;height:100%;transition:transform .7s;transform-style:preserve-3d}
+.card.flip .in{transform:rotateY(180deg)}
+.f,.b{position:absolute;inset:0;display:grid;place-items:center;padding:20px;border-radius:4px;backface-visibility:hidden}
+.f{border:1px solid rgba(217,195,160,.45);font-family:"Cormorant Garamond",serif;font-size:1.6rem;font-style:italic;color:var(--gold)}
+.b{transform:rotateY(180deg);background:var(--ivory);color:#2a2230;font-size:.98rem;font-weight:400}
+#wish{margin-top:40px;padding:12px 28px;border:1px solid var(--gold);border-radius:999px;background:transparent;color:var(--gold);font:400 .98rem Jost,sans-serif;letter-spacing:.05em;cursor:pointer;transition:.25s}
+#wish:hover{background:var(--gold);color:#2a2230}
+#wish:focus-visible{outline:2px solid var(--ivory);outline-offset:3px}
+#wishtext{min-height:3.2em;margin-top:18px;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:1.35rem;color:var(--ivory)}
+#letter{margin-top:44px}
+.env{width:min(380px,100%);margin:0 auto;background:transparent;color:var(--ivory);border:1px solid rgba(217,195,160,.45);border-radius:4px;padding:28px 24px;cursor:pointer;font:inherit;text-align:left;transition:background .3s,color .3s}
+.env:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+.env b{font-family:"Cormorant Garamond",serif;font-weight:500;font-style:italic;font-size:1.5rem;display:block;text-align:center;color:var(--gold)}
+.env .msg{display:none;margin-top:14px;white-space:pre-line;font-weight:400}
+.env.open{background:var(--ivory);color:#2a2230}
+.env.open b{color:#7a6446}
+.env.open .msg{display:block}
+.env.open .tap{display:none}
+.tap{display:block;text-align:center;margin-top:6px;color:var(--mute);font-size:.9rem}
+canvas{position:fixed;inset:0;pointer-events:none;z-index:9}
+@media (prefers-reduced-motion:reduce){.flame{animation:none}.in{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+<main>
+  <section id="hero">
+    <h1 id="title"></h1>
+    <p id="lead"></p>
+    <svg id="cake" viewBox="0 0 340 300" role="img" aria-label="Kue ulang tahun dengan tiga lilin">
+      <ellipse cx="170" cy="272" rx="150" ry="16" fill="#00000055"/>
+      <rect x="40" y="170" width="260" height="100" rx="20" fill="#cfa9a8"/>
+      <rect x="62" y="120" width="216" height="60" rx="18" fill="#efe3d3"/>
+      <path d="M40 190q22 22 44 0t44 0 44 0 44 0 44 0v-10H40z" fill="#fbf6ef"/>
+      <path d="M62 140q18 18 36 0t36 0 36 0 36 0 36 0v-10H62z" fill="#fbf6ef"/>
+      <circle cx="90" cy="228" r="7" fill="#d9c3a0"/><circle cx="170" cy="236" r="7" fill="#f4ede4"/><circle cx="250" cy="228" r="7" fill="#d9c3a0"/>
+      <g id="candles"></g>
+    </svg>
+    <span class="hint" id="hint">Ketuk api lilin untuk meniupnya</span>
+  </section>
+
+  <section id="after">
+    <h2>Semoga semua doamu terkabul</h2>
+    <p class="sub">Ketuk kartunya satu per satu</p>
+    <div class="cards" id="cards"></div>
+    <button id="wish">Buat permintaan</button>
+    <p id="wishtext" aria-live="polite"></p>
+    <div id="letter">
+      <button class="env" id="env" aria-expanded="false">
+        <b>Ada surat untukmu</b>
+        <span class="tap">Ketuk untuk membuka</span>
+        <span class="msg" id="msg"></span>
+      </button>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ====== UBAH DI SINI ====== */
+const CONFIG = {
+  name: "Rani",
+  age: 19,
+  lead: "Hari ini hari spesialmu.",
+  cards: [
+    ["Kamu", "Orang yang bikin hari-hari di sekitarmu jadi lebih ringan dan seru."],
+    ["Doaku", "Semoga sehat, bahagia, dan semua rencanamu tahun ini berjalan lancar."],
+    ["Harapanku", "Semoga di umur baru ini kamu makin berani, makin tenang, dan makin disayang."]
+  ],
+  wishes: [
+    "Semoga tahun ini penuh kabar baik.",
+    "Semoga mimpimu satu per satu jadi nyata.",
+    "Semoga selalu dikelilingi orang yang tulus.",
+    "Semoga hatimu selalu tenang dan bahagia.",
+    "Semoga ada banyak tawa di setiap harimu."
+  ],
+  letter: "Selamat ulang tahun, {name}!\n\nTerima kasih sudah jadi teman yang baik. Semoga umur {age} ini jadi tahun terbaikmu.\n\nDari temanmu 🤍"
+};
+/* ========================= */
+
+const $ = s => document.querySelector(s);
+const fill = t => t.replace(/{name}/g, CONFIG.name).replace(/{age}/g, CONFIG.age);
+$("#title").textContent = `Selamat ulang tahun, ${CONFIG.name}!`;
+$("#lead").textContent = fill(CONFIG.lead) + ` Umurmu sekarang ${CONFIG.age}.`;
+$("#msg").textContent = fill(CONFIG.letter);
+document.title = `Untuk ${CONFIG.name} 🎂`;
+
+// Lilin
+const NS = "http://www.w3.org/2000/svg", xs = [90, 170, 250];
+let lit = xs.length;
+xs.forEach((x, i) => {
+  const g = document.createElementNS(NS, "g");
+  g.innerHTML = `<rect x="${x-6}" y="${i===1?72:80}" width="12" height="${i===1?58:50}" rx="4" fill="${i===1?'#f4ede4':'#d9c3a0'}"/>
+  <path class="flame" tabindex="0" role="button" aria-label="Tiup lilin ${i+1}" d="M${x} ${i===1?40:48}c10 14 12 22 0 30c-12-8-10-16 0-30z" fill="#f2b866"/>
+  <circle class="smoke" cx="${x}" cy="${i===1?44:52}" r="7" fill="#ffffff44"/>`;
+  $("#candles").appendChild(g);
+});
+document.querySelectorAll(".flame").forEach(f => {
+  const blow = () => {
+    if (f.classList.contains("off")) return;
+    f.classList.add("off"); f.removeAttribute("tabindex"); lit--;
+    $("#hint").textContent = lit ? `Tinggal ${lit} lilin lagi` : "Make a wish…";
+    if (!lit) setTimeout(celebrate, 500);
+  };
+  f.addEventListener("click", blow);
+  f.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); blow(); } });
+});
+
+// Kartu
+CONFIG.cards.forEach(([t, m], i) => {
+  const b = document.createElement("button");
+  b.className = `card c${i+1}`;
+  b.setAttribute("aria-label", `Buka kartu ${t}`);
+  b.innerHTML = `<div class="in"><div class="f">${t}</div><div class="b">${fill(m)}</div></div>`;
+  b.onclick = () => b.classList.toggle("flip");
+  $("#cards").appendChild(b);
+});
+
+// Permintaan acak
+let last = -1;
+$("#wish").onclick = () => {
+  let n; do { n = Math.floor(Math.random() * CONFIG.wishes.length); } while (n === last && CONFIG.wishes.length > 1);
+  last = n; $("#wishtext").textContent = CONFIG.wishes[n]; burst(innerWidth/2, innerHeight*0.6, 40);
+};
+
+// Surat
+$("#env").onclick = e => {
+  const el = e.currentTarget, open = el.classList.toggle("open");
+  el.setAttribute("aria-expanded", open);
+};
+
+// Konfeti
+const cv = $("#fx"), cx = cv.getContext("2d"); let parts = [], raf = 0;
+const reduce = matchMedia("(prefers-reduced-motion:reduce)").matches;
+const size = () => { cv.width = innerWidth; cv.height = innerHeight; };
+size(); addEventListener("resize", size);
+const cols = ["#cfa9a8", "#efe3d3", "#f4ede4", "#d9c3a0", "#ffffff"];
+function burst(x, y, n) {
+  if (reduce) return;
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, s = 3 + Math.random() * 6;
+    parts.push({x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 4, r: 4 + Math.random() * 5, c: cols[i % cols.length], rot: Math.random() * 6, life: 110});
+  }
+  if (!raf) raf = requestAnimationFrame(tick);
+}
+function tick() {
+  cx.clearRect(0, 0, cv.width, cv.height);
+  parts = parts.filter(p => p.life > 0);
+  parts.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += .18; p.vx *= .99; p.rot += .1; p.life--;
+    cx.save(); cx.translate(p.x, p.y); cx.rotate(p.rot); cx.globalAlpha = Math.min(1, p.life / 30);
+    cx.fillStyle = p.c; cx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r); cx.restore();
+  });
+  raf = parts.length ? requestAnimationFrame(tick) : 0;
+}
+function celebrate() {
+  burst(innerWidth * .3, innerHeight * .4, 70); burst(innerWidth * .7, innerHeight * .4, 70);
+  $("#hint").textContent = "Selamat ulang tahun! 🎉";
+  const a = $("#after"); a.classList.add("show");
+  setTimeout(() => a.scrollIntoView({behavior: reduce ? "auto" : "smooth"}), 700);
+}
+</script>
+</body>
+</html>
