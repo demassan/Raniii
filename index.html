@@ -462,6 +462,8 @@
       flame.removeAttribute("tabindex");
       litCandles--;
 
+      SFX.blow(candleXPositions.length - litCandles - 1, litCandles === 0);
+
       $("#hint").textContent = litCandles
         ? `Tinggal ${litCandles} lilin lagi`
         : "Make a wish…";
@@ -732,6 +734,82 @@
       button.addEventListener("click", toggle);
 
       return { unlock, start };
+    })();
+
+    /* =========================================================
+       7b. Efek suara tiup lilin (terpisah dari Music / lagu.mp3)
+       ========================================================= */
+    const SFX = (() => {
+      let ctx, noiseBuffer;
+    
+      function init() {
+        if (!ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return false;
+          ctx = new AudioCtx();
+    
+          // Buffer noise 0,6 detik, dipakai untuk bunyi "fuuh"
+          noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.6, ctx.sampleRate);
+          const data = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+        }
+        if (ctx.state === "suspended") ctx.resume();
+        return true;
+      }
+    
+      function ping(freq, time, duration, volume) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, time);
+        gain.gain.exponentialRampToValueAtTime(volume, time + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(time);
+        osc.stop(time + duration + 0.05);
+      }
+    
+      // step: 0, 1, 2 (lilin ke-berapa yang ditiup)
+      function blow(step = 0, isLast = false) {
+        if (!init()) return;
+        const t = ctx.currentTime;
+    
+        // 1) Tiupan "fuuh"
+        const src = ctx.createBufferSource();
+        src.buffer = noiseBuffer;
+    
+        const filter = ctx.createBiquadFilter();
+        filter.type = "bandpass";
+        filter.Q.value = 0.8;
+        filter.frequency.setValueAtTime(1800 + step * 300, t);
+        filter.frequency.exponentialRampToValueAtTime(500, t + 0.35);
+    
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(0.5, t + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+    
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        src.start(t);
+        src.stop(t + 0.45);
+    
+        // 2) "Ting" kecil, nadanya naik tiap lilin (C5, E5, G5)
+        const notes = [523.25, 659.25, 783.99];
+        ping(notes[step] || notes[0], t + 0.08, 0.35, 0.18);
+    
+        // 3) Kilauan di lilin terakhir
+        if (isLast) {
+          [1046.5, 1318.5, 1568.0, 2093.0].forEach((f, i) => {
+            ping(f, t + 0.25 + i * 0.09, 0.5, 0.12);
+          });
+        }
+      }
+    
+      return { blow };
     })();
 
     /* =========================================================
