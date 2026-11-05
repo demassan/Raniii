@@ -74,6 +74,17 @@
     /* =========================================================
        3. Bagian kue (hero)
        ========================================================= */
+    #hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: 100svh;
+      padding: 24px 0;
+    }
+
+
     #hero h1 {
       font-size: clamp(2.4rem, 10vw, 4.2rem);
       font-style: italic;
@@ -88,21 +99,24 @@
 
     #cake {
       display: block;
-      width: min(320px, 84vw);
-      margin: 34px auto 0;
+      width: min(400px, 90vw);
+      margin: 40px auto 0;
     }
 
     .hint {
       display: inline-block;
-      margin-top: 20px;
+      margin-top: 32px;
       color: var(--gold);
-      font-size: 0.95rem;
+      font-size: 1.1rem;
       letter-spacing: 0.04em;
     }
 
     /* Api lilin */
     .flame {
       cursor: pointer;
+      stroke: transparent;
+      stroke-width: 24px;
+      stroke-linejoin: round;
       transform-origin: center bottom;
       transform-box: fill-box;
       animation: flicker 1.1s ease-in-out infinite alternate;
