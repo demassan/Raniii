@@ -152,7 +152,6 @@
       0%   { opacity: 0.6; transform: translateY(0); }
       100% { opacity: 0;   transform: translateY(-26px); }
     }
-
     /* =========================================================
        4. Bagian setelah lilin padam
        ========================================================= */
@@ -170,108 +169,10 @@
       font-style: italic;
     }
 
-    .sub {
-      margin-bottom: 30px;
-      color: var(--mute);
-    }
-
-    /* ---- Kartu ---- */
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-      gap: 14px;
-    }
-
-    .card {
-      height: 170px;
-      padding: 0;
-      border: 0;
-      background: none;
-      color: inherit;
-      font: inherit;
-      cursor: pointer;
-      perspective: 800px;
-    }
-
-    .card:focus-visible {
-      outline: 2px solid var(--gold);
-      outline-offset: 4px;
-    }
-
-    .card-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      transform-style: preserve-3d;
-      transition: transform 0.7s;
-    }
-
-    .card.flip .card-inner {
-      transform: rotateY(180deg);
-    }
-
-    .card-front,
-    .card-back {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      padding: 20px;
-      border-radius: 4px;
-      backface-visibility: hidden;
-    }
-
-    .card-front {
-      border: 1px solid rgba(217, 195, 160, 0.45);
-      color: var(--gold);
-      font-family: "Cormorant Garamond", serif;
-      font-size: 1.6rem;
-      font-style: italic;
-    }
-
-    .card-back {
-      background: var(--ivory);
-      color: var(--ink);
-      font-size: 0.98rem;
-      font-weight: 400;
-      transform: rotateY(180deg);
-    }
-
-    /* ---- Tombol permintaan ---- */
-    #wish {
-      margin-top: 40px;
-      padding: 12px 28px;
-      border: 1px solid var(--gold);
-      border-radius: 999px;
-      background: transparent;
-      color: var(--gold);
-      font: 400 0.98rem Jost, sans-serif;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      transition: 0.25s;
-    }
-
-    #wish:hover {
-      background: var(--gold);
-      color: var(--ink);
-    }
-
-    #wish:focus-visible {
-      outline: 2px solid var(--ivory);
-      outline-offset: 3px;
-    }
-
-    #wishtext {
-      min-height: 3.2em;
-      margin-top: 18px;
-      font-family: "Cormorant Garamond", serif;
-      font-size: 1.35rem;
-      font-style: italic;
-    }
 
     /* ---- Surat ---- */
     #letter {
-      margin-top: 44px;
+      margin-top: 28px;
     }
 
     .env {
@@ -341,7 +242,6 @@
        ========================================================= */
     @media (prefers-reduced-motion: reduce) {
       .flame      { animation: none; }
-      .card-inner { transition: none; }
     }
   </style>
 </head>
@@ -382,13 +282,7 @@
 
     <!-- Bagian 2: muncul setelah semua lilin padam -->
     <section id="after">
-      <h2>Semoga semua doamu terkabul</h2>
-      <p class="sub">Ketuk kartunya satu per satu</p>
-
-      <div class="cards" id="cards"></div>
-
-      <button id="wish" type="button">Buat permintaan</button>
-      <p id="wishtext" aria-live="polite"></p>
+      <h2>Selamat Ulang Tahun 🎂</h2>
 
       <div id="letter">
         <button class="env" id="env" type="button" aria-expanded="false">
@@ -411,26 +305,14 @@
       age: 19,
       greeting: "Hai Ranii!",
 
-      // Setiap kartu: [judul di depan, isi di belakang]
-      cards: [
-        ["Kamu",      "Orang yang bikin hari-hari di sekitarmu jadi lebih ringan dan seru."],
-        ["Doaku",     "Semoga sehat, bahagia, dan semua rencanamu tahun ini berjalan lancar."],
-        ["Harapanku", "Semoga di umur baru ini kamu makin berani, makin tenang, dan makin disayang."],
-      ],
-
-      // Satu doa akan dipilih acak saat tombol ditekan
-      wishes: [
-        "Semoga tahun ini penuh kabar baik.",
-        "Semoga mimpimu satu per satu jadi nyata.",
-        "Semoga selalu dikelilingi orang yang tulus.",
-        "Semoga hatimu selalu tenang dan bahagia.",
-        "Semoga ada banyak tawa di setiap harimu.",
-      ],
-
       letter:
-        "Selamat ulang tahun, {name}!\n\n" +
-        "Terima kasih sudah jadi teman yang baik. Semoga umur {age} ini jadi tahun terbaikmu.\n\n" +
-        "Dari temanmu 🤍",
+        "Hai Rani, selamat ulang tahun!\n\n" +
+        "Sekarang 19 tahun yaa? Bertambahnya usia tanggung jawab kamu juga semakin besar, " +
+        "selalu berprogres menjadi pribadi yang lebih baik yaa!\n\n" +
+        "Yang engga kalah penting, tolong di jaga kesehatannya 😆 " +
+        "InsyaAllah doa terbaikku untuk kamu.\n\n" +
+        "Salam hangat,\n" +
+        "Raihan Demassani",
     };
 
     /* =========================================================
@@ -501,42 +383,9 @@
       });
     });
 
-    /* =========================================================
-       5. Kartu ucapan
-       ========================================================= */
-    CONFIG.cards.forEach(([title, message]) => {
-      const card = document.createElement("button");
-      card.type = "button";
-      card.className = "card";
-      card.setAttribute("aria-label", `Buka kartu ${title}`);
-      card.innerHTML = `
-        <div class="card-inner">
-          <div class="card-front">${title}</div>
-          <div class="card-back">${fill(message)}</div>
-        </div>
-      `;
-      card.addEventListener("click", () => card.classList.toggle("flip"));
-      $("#cards").appendChild(card);
-    });
 
     /* =========================================================
-       6. Permintaan acak
-       ========================================================= */
-    let lastWishIndex = -1;
-
-    $("#wish").addEventListener("click", () => {
-      let index;
-      do {
-        index = Math.floor(Math.random() * CONFIG.wishes.length);
-      } while (index === lastWishIndex && CONFIG.wishes.length > 1);
-
-      lastWishIndex = index;
-      $("#wishtext").textContent = CONFIG.wishes[index];
-      burst(innerWidth / 2, innerHeight * 0.6, 40);
-    });
-
-    /* =========================================================
-       7. Surat
+       5. Surat
        ========================================================= */
     $("#env").addEventListener("click", (event) => {
       const envelope = event.currentTarget;
@@ -545,7 +394,7 @@
     });
 
     /* =========================================================
-       8. Konfeti
+       6. Konfeti
        ========================================================= */
     const canvas = $("#fx");
     const ctx = canvas.getContext("2d");
@@ -607,7 +456,7 @@
     }
 
     /* =========================================================
-       9. Saat semua lilin padam
+       7. Saat semua lilin padam
        ========================================================= */
     function celebrate() {
       burst(innerWidth * 0.3, innerHeight * 0.4, 70);
