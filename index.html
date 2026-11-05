@@ -259,7 +259,49 @@
     }
 
     /* =========================================================
-       5. Aksesibilitas
+       5. Tombol musik
+       ========================================================= */
+    .sound {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 14px);
+      right: 14px;
+      z-index: 10;
+      display: none;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 1px solid rgba(217, 195, 160, 0.45);
+      border-radius: 50%;
+      background: rgba(23, 19, 29, 0.6);
+      color: var(--gold);
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+    }
+
+    .sound.show {
+      display: grid;
+      place-items: center;
+    }
+
+    .sound:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 3px;
+    }
+
+    .sound .slash {
+      display: none;
+    }
+
+    .sound.muted .slash {
+      display: block;
+    }
+
+    .sound.muted .waves {
+      display: none;
+    }
+
+    /* =========================================================
+       6. Aksesibilitas
        ========================================================= */
     @media (prefers-reduced-motion: reduce) {
       .flame      { animation: none; }
@@ -270,6 +312,16 @@
 <body>
   <!-- Lapisan konfeti -->
   <canvas id="fx" aria-hidden="true"></canvas>
+
+  <!-- Tombol musik (muncul setelah lilin padam) -->
+  <button class="sound" id="sound" type="button" aria-label="Matikan musik">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+         stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" />
+      <path class="waves" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" />
+      <path class="slash" d="M16 9.5l5 5M21 9.5l-5 5" />
+    </svg>
+  </button>
 
   <main>
 
@@ -339,6 +391,11 @@
       // Hapus baris ini kalau ingin menyembunyikan foto.
       photo: PHOTO_DATA,
 
+      // Musik: kosongkan untuk musik bawaan (kotak musik "Happy Birthday"
+      // yang dibuat langsung di browser). Atau isi nama file lagu yang
+      // diunggah ke folder yang sama, misalnya "lagu.mp3".
+      music: "",
+
       letter:
         "Hai Rani, selamat ulang tahun!\n\n" +
         "Udah 19 tahun niih? Bertambahnya usia berarti tanggung jawab kamu juga semakin besar, " +
@@ -400,6 +457,7 @@
     function blowOut(flame) {
       if (flame.classList.contains("off")) return;
 
+      Music.unlock(); // izin audio harus diminta saat layar diketuk
       flame.classList.add("off");
       flame.removeAttribute("tabindex");
       litCandles--;
@@ -496,13 +554,198 @@
     }
 
     /* =========================================================
-       7. Saat semua lilin padam
+       7. Musik
+       ========================================================= */
+    const Music = (() => {
+      const button = $("#sound");
+
+      // Frekuensi nada (Hz)
+      const NOTE = {
+        F2: 87.31, Bb2: 116.54, C3: 130.81, C4: 261.63, D4: 293.66, E4: 329.63,
+        F4: 349.23, G4: 392.0, A4: 440.0, Bb4: 466.16, C5: 523.25,
+      };
+
+      // "Happy Birthday" (lagu domain publik): [nada, panjang dalam ketukan]
+      const BEAT = 0.6;
+      const MELODY = [
+        ["C4", 0.75], ["C4", 0.25], ["D4", 1], ["C4", 1], ["F4", 1], ["E4", 2],
+        ["C4", 0.75], ["C4", 0.25], ["D4", 1], ["C4", 1], ["G4", 1], ["F4", 2],
+        ["C4", 0.75], ["C4", 0.25], ["C5", 1], ["A4", 1], ["F4", 1], ["E4", 1], ["D4", 1],
+        ["Bb4", 0.75], ["Bb4", 0.25], ["A4", 1], ["F4", 1], ["G4", 1], ["F4", 2],
+      ];
+      const BASS = ["F2", "C3", "C3", "F2", "F2", "C3", "Bb2", "F2"]; // satu nada per birama
+
+      // Alunan lembut setelah lagu selesai (F - Dm - Bb - C), diulang terus
+      const CHORDS = [
+        [174.61, 220.0, 261.63, 349.23],
+        [146.83, 174.61, 220.0, 293.66],
+        [233.08, 293.66, 349.23, 466.16],
+        [261.63, 329.63, 392.0, 523.25],
+      ];
+      const PATTERN = [0, 1, 2, 3, 2, 1, 2, 1];
+      const EIGHTH = 0.35;
+
+      let ctx, out, bus, timer;
+      let nextStart = 0;
+      let firstPass = true;
+      let started = false;
+      let muted = false;
+      let audioEl = null;
+
+      // Dipanggil saat pertama kali layar diketuk (syarat browser untuk audio)
+      function unlock() {
+        if (CONFIG.music) {
+          if (audioEl) return;
+          audioEl = new Audio(CONFIG.music);
+          audioEl.loop = true;
+          audioEl.volume = 0.7;
+          audioEl.muted = true;
+          audioEl.play()
+            .then(() => { audioEl.pause(); audioEl.currentTime = 0; audioEl.muted = false; })
+            .catch(() => {});
+          return;
+        }
+
+        if (!ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+
+          ctx = new AudioCtx();
+          out = ctx.createGain();
+          out.connect(ctx.destination);
+
+          bus = ctx.createGain();
+          bus.gain.value = 0.6;
+          bus.connect(out);
+
+          // Gema tipis supaya bunyinya terasa seperti kotak musik
+          const delay = ctx.createDelay();
+          const feedback = ctx.createGain();
+          const wet = ctx.createGain();
+          delay.delayTime.value = 0.32;
+          feedback.gain.value = 0.3;
+          wet.gain.value = 0.35;
+          bus.connect(delay);
+          delay.connect(feedback);
+          feedback.connect(delay);
+          delay.connect(wet);
+          wet.connect(out);
+        }
+        if (ctx.state === "suspended") ctx.resume();
+      }
+
+      // Satu nada ala kotak musik: bunyi sinus + sedikit nada atas, lalu meredup
+      function tone(freq, time, duration, volume) {
+        const gain = ctx.createGain();
+        const overtone = ctx.createGain();
+        const main = ctx.createOscillator();
+        const high = ctx.createOscillator();
+
+        main.type = "sine";
+        high.type = "sine";
+        main.frequency.value = freq;
+        high.frequency.value = freq * 2.01;
+        overtone.gain.value = 0.25;
+
+        gain.gain.setValueAtTime(0.0001, time);
+        gain.gain.exponentialRampToValueAtTime(volume, time + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+
+        main.connect(gain);
+        high.connect(overtone);
+        overtone.connect(gain);
+        gain.connect(bus);
+
+        main.start(time);
+        high.start(time);
+        main.stop(time + duration + 0.05);
+        high.stop(time + duration + 0.05);
+      }
+
+      function scheduleMelody(start) {
+        let time = start;
+        MELODY.forEach(([name, beats]) => {
+          tone(NOTE[name], time, 1.6, 0.5);
+          time += beats * BEAT;
+        });
+        BASS.forEach((name, bar) => tone(NOTE[name], start + bar * 3 * BEAT, 2.2, 0.28));
+        return time;
+      }
+
+      function scheduleAmbient(start) {
+        CHORDS.forEach((chord, bar) => {
+          PATTERN.forEach((index, step) => {
+            tone(chord[index], start + (bar * PATTERN.length + step) * EIGHTH, 1.4, 0.2);
+          });
+        });
+        return start + CHORDS.length * PATTERN.length * EIGHTH;
+      }
+
+      // Menjadwalkan nada sedikit demi sedikit agar tidak menumpuk
+      function pump() {
+        while (nextStart < ctx.currentTime + 1.5) {
+          if (nextStart < ctx.currentTime) nextStart = ctx.currentTime + 0.1;
+          nextStart = firstPass ? scheduleMelody(nextStart) + 0.6 : scheduleAmbient(nextStart);
+          firstPass = false;
+        }
+      }
+
+      function start() {
+        unlock();
+        if (started || !(audioEl || ctx)) return;
+        started = true;
+        button.classList.add("show");
+
+        if (audioEl) {
+          audioEl.play().catch(() => {});
+          return;
+        }
+        nextStart = ctx.currentTime + 0.1;
+        pump();
+        timer = setInterval(pump, 400);
+      }
+
+      function toggle() {
+        muted = !muted;
+        button.classList.toggle("muted", muted);
+        button.setAttribute("aria-label", muted ? "Nyalakan musik" : "Matikan musik");
+
+        if (audioEl) {
+          if (muted) audioEl.pause();
+          else audioEl.play().catch(() => {});
+          return;
+        }
+        out.gain.setTargetAtTime(muted ? 0 : 1, ctx.currentTime, 0.05);
+        clearInterval(timer);
+        if (!muted) timer = setInterval(pump, 400);
+      }
+
+      // Hentikan sementara saat tab ditinggalkan
+      document.addEventListener("visibilitychange", () => {
+        if (!started || muted) return;
+        if (audioEl) {
+          if (document.hidden) audioEl.pause();
+          else audioEl.play().catch(() => {});
+        } else if (ctx) {
+          if (document.hidden) ctx.suspend();
+          else ctx.resume();
+        }
+      });
+
+      button.addEventListener("click", toggle);
+
+      return { unlock, start };
+    })();
+
+    /* =========================================================
+       8. Saat semua lilin padam
        ========================================================= */
     function celebrate() {
       burst(innerWidth * 0.3, innerHeight * 0.4, 70);
       burst(innerWidth * 0.7, innerHeight * 0.4, 70);
 
       $("#hint").textContent = "TADAAAAAAA! 🎉";
+      Music.start();
 
       const after = $("#after");
       after.classList.add("show");
